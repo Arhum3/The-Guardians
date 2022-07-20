@@ -1,0 +1,574 @@
+import React, { Component, useState } from "react";
+import { Link, withRouter } from "react-router-dom";
+import PropTypes from "prop-types";
+import classnames from "classnames";
+import { connect } from "react-redux";
+import AccNavbar from "../layout/accountsNavbar";
+import Grid from '@material-ui/core/Grid';
+import Item from '@material-ui/core/ListItem'
+import DatePickers from "./datetextbox"
+import TextField from '@mui/material/TextField';
+import exitimg from "../../images/exit.svg"
+import axios from 'axios'
+
+class finalizeAccounts extends Component {
+  constructor() {
+    super();
+    this.state = {
+      email: "",
+      phone: "",
+      Designation: "",
+      dept:"",
+      Status: "",
+      doj:"",
+      dor: "",
+      remarks : "",
+      employee:[],
+      accResponse:"",
+      errors: {}
+    };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (nextProps.errors) {
+      this.setState({
+        errors: nextProps.errors
+      });
+    }
+  }
+
+  componentDidMount(){
+    this.getEmpData()
+  }
+
+  onChange = e => {
+    this.setState({ [e.target.id]: e.target.value });
+  };
+  
+  getEmpData = () =>{
+    axios
+    .post("/api/users/displayAccEmpData" )
+    .then((response) => {
+      const data = response.data.resultArray
+      console.log(data)
+      if(data.length!==0)
+      {
+        this.setState({ employee: data })
+        this.setState({email: this.state.employee[0].email})
+        this.setState({phone: this.state.employee[0].phone})
+        this.setState({Designation: this.state.employee[0].Designation})
+        this.setState({dept: this.state.employee[0].dept})
+        this.setState({doj: this.state.employee[0].doj})
+        this.setState({status: this.state.employee[0].Status})
+      }
+    })
+  }
+
+  sleep = (milliseconds) => {
+    return new Promise(resolve => setTimeout(resolve, milliseconds))
+  }
+
+  onSubmit = e => {
+    e.preventDefault();
+
+    var x
+    if(document.getElementById("yes").checked === true)
+    {
+        x = document.getElementById("yes").value
+    }
+    else if(document.getElementById("no").checked === true)
+    {
+        x = document.getElementById("no").value
+    }
+
+    const clearanceData = {
+      email: this.state.email,
+      phone: this.state.phone,
+      Designation: this.state.Designation,
+      Status: this.state.Status,
+      doj: this.state.doj,
+      accResponse: x
+    };
+    
+    let res = ""
+    axios
+    .post("/api/users/accountsClearance", clearanceData)
+    .then((response)=>{
+        const data = response.data.accRes
+        res = data["res"]
+    })
+    this.sleep(1000).then(r=>{
+        
+        if(Object.entries(this.state.errors).length===0 && x==="no")
+        {
+            alert("Application has been transferred to Office Inventory Department for Clearance")
+        }
+        else if(Object.entries(this.state.errors).length===0 && res === "yes")
+        {
+            alert("It seems that designated employee has some dues pending, Mailing response to the designated employee")
+        }
+    })
+  };
+  
+
+  render() {
+    const { errors } = this.state;
+    
+    return (
+      <div>
+        <AccNavbar />
+        <Grid container spacing={1} style={{marginTop: 50}}>
+            <Grid item xs={3} style={{ marginLeft:'300px'}}>
+                <Item>
+                    <h2><b>Resignation Procedure</b></h2>
+                </Item>
+            
+            <form noValidate onSubmit={this.onSubmit}>
+                <Item>
+                    <div class="input-field col s12" style={{width:"363px"}}>
+                        <input
+                        onChange={this.onChange}
+                        value={this.state.email}
+                        error={errors.email}
+                        id="email"
+                        type="email"
+                        class={classnames("", {
+                            invalid: errors.email || errors.emailnotfound
+                        })}
+                        />
+                        <span class="red-text">
+                        {errors.email}
+                        {errors.emailnotfound}
+                        </span>
+                    </div>
+                </Item>
+                <Item>
+                    <div class="input-field col s12" style={{width:"363px"}}>
+                        <input
+                        onChange={this.onChange}
+                        value={this.state.Designation}
+                        error={errors.Designation}
+                        id="Designation"
+                        type="text"
+                        class={classnames("", {
+                            invalid: errors.Designation || errors.Designation
+                        })}
+                        />
+                        <span class="red-text">
+                        {errors.Designation}
+                        </span>
+                    </div>
+                </Item>
+                
+                <Item>
+                    <div class="input-field col s12" style={{width:"363px"}}>
+                        <input
+                        onChange={this.onChange}
+                        value={this.state.dept}
+                        error={errors.dept}
+                        id="dept"
+                        type="text"
+                        class={classnames("", {
+                            invalid: errors.dept || errors.dept
+                        })}
+                        />
+                        <span class="red-text">
+                        {errors.dept}
+                        </span>
+                    </div>
+                </Item>
+
+                <Item>
+                    <div class="input-field col s12" style={{width:"363px"}}>
+                        <input
+                        onChange={this.onChange}
+                        value={this.state.phone}
+                        error={errors.phone}
+                        id="phone"
+                        type="text"
+                        class={classnames("", {
+                            invalid: errors.phone || errors.phone
+                        })}
+                        />
+                        <span class="red-text">
+                        {errors.phone}
+                        </span>
+                    </div>
+                </Item>
+
+                <Item>
+                    <div class="input-field col s12" style={{width:"363px"}}>
+                        <input
+                        onChange={this.onChange}
+                        value={this.state.status}
+                        error={errors.status}
+                        id="status"
+                        type="text"
+                        class={classnames("", {
+                            invalid: errors.status || errors.status
+                        })}
+                        />
+                        <span class="red-text">
+                        {errors.status}
+                        </span>
+                    </div>
+                </Item>
+                
+                <Item>
+                    <div class="input-field col s12" style={{width:"363px"}}>
+                        <input
+                        value={this.state.doj}
+                        id="doj"
+                        type="text"
+                        />
+                    </div>
+                </Item>
+
+                {/* <Item><h5>Date of Joining</h5></Item>
+                <Item>
+                    <DatePickers/>    
+                </Item>                        
+                <Item style={{marginTop:50}}><h4>Other Details</h4></Item>
+                <Item><h5>Reason for Resignation</h5></Item>
+                <Item>
+                    <TextField id = "outlined-multiline-static"
+                    label="Enter"
+                    multiline
+                    rows={3}
+                    style={{width:"363px"}}
+                    />  
+                </Item> */}
+                {/* <Item style={{marginTop:20}}>
+                    <h6><b>Advance Notice given</b></h6>
+                    <p>
+                        <label>
+                            <input type="checkbox" id = "Good" name = "Good" value={10} onChange={this.onChangePCR}/>
+                            <span style={{fontWeight:'300', color: 'black' }}><b>Served</b></span>
+                        </label>
+                    </p>
+                    <p>
+                        <label>
+                            <input type="checkbox" id = 'pcr' name = 'pcr' value={6} onChange={this.onChangePCR}/>
+                            <span style={{fontWeight:'300', color: 'black' }}><b>Not Served</b></span>
+                        </label>
+                    </p>
+                </Item>
+                <Item>
+                    <h6><b>Leave Balance</b></h6>
+                    <div class="input-field inline">
+                        <input id="Casual" type="text" />
+                        <label for="Casual">Casual</label>
+                    </div>
+                    <div class="input-field inline" style={{marginLeft:20}}>
+                        <input id="Earned" type="text" />
+                        <label for="Earned">Earned</label>
+                    </div>
+                    
+                </Item>
+                <Item>
+                    <h6 style={{marginRight:15.6}}><b>Resign Submitted during leave</b></h6>
+                    <span></span>
+                    <p>
+                        <label>
+                            <input type="checkbox" onChange={this.onChangePCR}/>
+                            <span style={{fontWeight:'300', color: 'black' }}><b>Yes</b></span>
+                        </label>
+                    </p>
+                    <p>
+                        <label>
+                            <input type="checkbox" onChange={this.onChangePCR}/>
+                            <span style={{fontWeight:'300', color: 'black' }}><b>No</b></span>
+                        </label>
+                    </p>
+                </Item>
+                <Item>
+                    <p style={{fontSize: 16}}><b>Medical OPD Balance (Accounts)</b></p>
+                    <div class = "input-field inline">
+                        <input id="score_inline" type="text" class="validate"/>
+                    </div>
+                </Item> */}
+                {/* <Item><h4>Personal Traits</h4></Item>
+                <Item>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Particulars</th>
+                                <th>Good</th>
+                                <th>Average</th>
+                                <th>Poor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Integrity and Reliability</td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox"/>
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox"/>
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Acceptance of Responsibility</td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Knowledge of Work</td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Oral Communication Skills</td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Initiative and drive</td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Output to assignments</td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td>Amenability to Discipline</td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" />
+                                            <span style={{fontWeight:'300', color: 'black'}}></span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </Item>
+                <Item>
+                    <p style={{fontSize: 16}}><b>Total Score:</b></p>
+                    <div class = "input-field inline">
+                        <input id="score_inline" type="text" class="validate"/>
+                    </div>
+                </Item> */}
+                <Item><h4>Accounts</h4></Item>
+                <Item><h5>Remarks</h5></Item>
+                <Item>
+                    <TextField id = "outlined-multiline-static"
+                    label="Enter"
+                    multiline
+                    rows={3}
+                    style={{width:"363px"}}
+                    />  
+                </Item>
+                <Item>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><h5>Outstanding dues(if any)</h5></th>
+                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><b>All fees, Costs, Charges, Expenses</b></td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" id="yes" name="yes" value="yes"/>
+                                            <span style={{fontWeight:'300', color: 'black'}}>Yes</span>
+                                        </label>
+                                    </p>
+                                </td>
+                                <td>
+                                    <p>
+                                        <label>
+                                            <input type="checkbox" id="no" name="no" value="no"/>
+                                            <span style={{fontWeight:'300', color: 'black'}}>No</span>
+                                        </label>
+                                    </p>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </Item>
+                <button
+                    style={{
+                        background:'#4169E1',
+                        color: 'white',
+                        width: "150px",
+                        borderRadius: "3px",
+                        letterSpacing: "1.5px",
+                        marginTop: "2rem",
+                        marginLeft: 20
+                    }}
+                    type="submit"
+                    className="btn btn-large waves-effect waves-light hoverable accent-3"
+                    >
+                    Verify
+                </button>
+            </form>
+            </Grid>
+            <Grid item xs={6}>
+                <Item style={{marginTop:'14rem'}}>
+                    <img class="responsive-img" src={exitimg} alt="Resignation"/>
+                </Item>
+            </Grid>
+        </Grid>
+      </div>
+    );
+  }
+}
+
+//   export default connect(
+//     mapStateToProps,
+//     { empClearance }
+//   )(withRouter(finalizeAccounts));
+
+export default finalizeAccounts;
